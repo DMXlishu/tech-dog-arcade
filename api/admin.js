@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 
 const ORDERS_FILE = path.join(__dirname, '../orders.json');
-const PASSWORD = '8888';
+const PASSWORD = 'qwert';
 
 function readj(f) {
   try { return JSON.parse(fs.readFileSync(f, 'utf8')) } catch (e) { return [] }
