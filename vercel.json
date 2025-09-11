@@ -1,7 +1,7 @@
 {
   "functions": {
     "api/admin.js": {
-      "runtime": "vercel/node@2.0.1"
+      "runtime": "nodejs18.x"
     }
   }
 }
