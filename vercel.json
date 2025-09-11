@@ -8,3 +8,10 @@
     { "src": "/api/admin", "dest": "/api/admin.js" }
   ]
 }
+{
+  "functions": {
+    "api/admin.js": {
+      "runtime": "vercel-node@2.0.1"
+    }
+  }
+}

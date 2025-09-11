@@ -1,10 +1,6 @@
-// 指定运行时
-export const config = {
-  runtime: 'nodejs18.x'
-};
-
 const fs = require('fs');
 const path = require('path');
+
 const ORDERS_FILE = path.join(__dirname, '../orders.json');
 const PASSWORD = '8888';
 
