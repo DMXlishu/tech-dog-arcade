@@ -1,0 +1,10 @@
+{
+  "functions": {
+    "api/admin.js": {
+      "runtime": "nodejs18.x"
+    }
+  },
+  "routes": [
+    { "src": "/api/admin", "dest": "/api/admin.js" }
+  ]
+}
