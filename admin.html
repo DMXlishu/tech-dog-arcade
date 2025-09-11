@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>管理员后台 - 技术狗街机</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+body{margin:0;padding:20px;background:#f7f7f7;font-family:-apple-system,BlinkMacSystemFont,"Helvetica Neue",Arial;color:#333}
+h1{font-size:24px;margin-bottom:10px}
+button{cursor:pointer;padding:8px 14px;font-size:14px;border:1px solid #ccc;border-radius:4px;background:#fff}
+button.danger{background:#ff4d4f;color:#fff;border-color:#ff4d4f}
+table{width:100%;border-collapse:collapse;margin-top:10px}
+th,td{border:1px solid #aaa;padding:6px 4px;font-size:13px;text-align:center}
+th{background:#eee}
+tr:first-child td.orderNum{color:red;font-weight:bold}
+#sum{margin-top:10px;font-weight:bold}
+#pwdBox{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center}
+#pwdBox .box{background:#fff;border-radius:8px;padding:25px 30px;min-width:260px;text-align:center}
+#pwdBox input{width:100%;padding:8px;margin:8px 0;border:1px solid #ccc;border-radius:4px}
+</style>
+</head>
+<body>
+<h1>管理员后台</h1>
+<button id="clearBtn" class="danger">一键清除数据</button>
+
+<table id="adminTable">
+  <thead><tr><th>编号</th><th>日期</th><th>订单号</th><th>套餐</th><th>本单收益</th><th>总收益</th></tr></thead>
+  <tbody></tbody>
+</table>
+<div id="sum"></div>
+
+<!-- 密码框 -->
+<div id="pwdBox" class="box">
+  <div class="box">
+    <h3>输入管理密码</h3>
+    <input id="pwdInp" type="password" placeholder="密码" />
+    <button id="pwdBtn">确认</button>
+  </div>
+</div>
+
+<!-- 清除确认 -->
+<div id="clearSure" style="display:none">
+  <p>确定清空所有数据？编号将重新从 1 开始且<strong>不可恢复</strong>！</p>
+  <button id="sureBtn" class="danger">确定</button>
+  <button onclick="hideClear()">取消</button>
+</div>
+
+<script>
+const API_BASE = location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://tech-dog-arcade-xxx.vercel.app';
+
+/* ========== 密码验证 ========== */
+document.getElementById('pwdBtn').onclick = async () => {
+  const pwd = document.getElementById('pwdInp').value;
+  const res = await fetch(`${API_BASE}/api/admin`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ password: pwd })
+  });
+  const data = await res.json();
+  if (data.ok === false) return alert('密码错误');
+  document.getElementById('pwdBox').style.display = 'none';
+  loadAdmin(data);
+};
+
+/* ========== 加载后台数据 ========== */
+async function loadAdmin(data) {
+  const tbody = document.querySelector('#adminTable tbody');
+  tbody.innerHTML = '';
+  data.rows.forEach((r, i) => {
+    const tr = document.createElement('tr');
+    if (i === 0) tr.classList.add('firstRow');
+    tr.innerHTML = `
+      <td>${r.id}</td>
+      <td>${r.date}</td>
+      <td class="orderNum">${r.orderNum}</td>
+      <td>${r.plan}</td>
+      <td>${r.price}元</td>
+      <td>${r.total}元</td>`;
+    tbody.appendChild(tr);
+  });
+  document.getElementById('sum').textContent = `总收益：${data.total} 元`;
+}
+
+/* ========== 一键清除 ========== */
+document.getElementById('clearBtn').onclick = () => {
+  document.getElementById('clearSure').style.display = 'block';
+};
+async function hideClear() {
+  document.getElementById('clearSure').style.display = 'none';
+}
+document.getElementById('sureBtn').onclick = async () => {
+  const res = await fetch(`${API_BASE}/api/clear`, { method: 'POST' });
+  const data = await res.json();
+  alert(data.ok ? '已清空！' : '清空失败');
+  hideClear();
+  location.reload(); // 重新加载页面
+};
+</script>
+</body>
+</html>
