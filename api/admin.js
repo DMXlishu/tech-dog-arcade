@@ -1,3 +1,4 @@
+// @vercel/node
 // api/admin.js  （Vercel Serverless Function）
 import { readFileSync } from 'fs';
 import { join } from 'path';
