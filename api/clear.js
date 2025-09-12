@@ -1,9 +1,9 @@
 const { readOrders, writeOrders } = require('../lib/data');
 
-const PASSWORD = 'qwer123'; // 管理密码
+const PASSWORD = 'qwer123';
 
 module.exports = async (req, res) => {
-  // CORS 设置
+  // 设置CORS头
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST,OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -15,7 +15,12 @@ module.exports = async (req, res) => {
   }
 
   try {
-    const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
+    let body;
+    try {
+      body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
+    } catch (e) {
+      return res.status(400).json({ ok: false, msg: '无效的JSON数据' });
+    }
     
     if (body.password !== PASSWORD) {
       return res.status(401).json({ ok: false, msg: '密码错误' });
