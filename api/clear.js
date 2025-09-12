@@ -1,11 +1,14 @@
-const { writeOrders } = require('../lib/data');
+const { readOrders, writeOrders } = require('../lib/data');
 
-const PASSWORD = '8888';
+const PASSWORD = 'qwer123'; // 管理密码
 
 module.exports = async (req, res) => {
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
+  // CORS 设置
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST,OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+  if (req.method === 'OPTIONS') return res.status(200).end();
 
   if (req.method !== 'POST') {
     return res.status(405).json({ ok: false, msg: '仅支持POST请求' });
@@ -18,10 +21,24 @@ module.exports = async (req, res) => {
       return res.status(401).json({ ok: false, msg: '密码错误' });
     }
 
-    if (writeOrders([])) {
-      res.status(200).json({ ok: true, msg: '数据已清空' });
+    const orders = readOrders();
+    
+    if (orders.length === 0) {
+      return res.status(200).json({ ok: true, msg: '没有数据可清除' });
+    }
+
+    // 只保留最新订单，重置编号为1
+    const latestOrder = orders[orders.length - 1];
+    const resetOrder = {
+      ...latestOrder,
+      orderNum: 1,
+      id: Date.now()
+    };
+
+    if (writeOrders([resetOrder])) {
+      res.status(200).json({ ok: true, msg: '数据已重置，只保留最新订单' });
     } else {
-      res.status(500).json({ ok: false, msg: '清空数据失败' });
+      res.status(500).json({ ok: false, msg: '清除数据失败' });
     }
 
   } catch (error) {
