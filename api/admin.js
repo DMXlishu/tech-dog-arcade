@@ -1,9 +1,9 @@
 const { readOrders } = require('../lib/data');
 
-const PASSWORD = 'qwer123'; // 管理密码
+const PASSWORD = 'qwer123';
 
 module.exports = async (req, res) => {
-  // CORS 设置
+  // 设置CORS头
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST,OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -15,7 +15,12 @@ module.exports = async (req, res) => {
   }
 
   try {
-    const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
+    let body;
+    try {
+      body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
+    } catch (e) {
+      return res.status(400).json({ ok: false, msg: '无效的JSON数据' });
+    }
     
     // 验证密码
     if (body.password !== PASSWORD) {
@@ -24,17 +29,21 @@ module.exports = async (req, res) => {
 
     const orders = readOrders();
     let totalRevenue = 0;
-    let dailyTotal = 0;
     const today = new Date().toLocaleDateString('zh-CN');
+    let dailyTotal = 0;
     
     // 计算收益
     const rows = orders.map((order, index) => {
       totalRevenue += order.price;
       
       // 计算今日收益
-      const orderDate = new Date(order.createdAt || order.date).toLocaleDateString('zh-CN');
-      if (orderDate === today) {
-        dailyTotal += order.price;
+      try {
+        const orderDate = new Date(order.createdAt || order.date).toLocaleDateString('zh-CN');
+        if (orderDate === today) {
+          dailyTotal += order.price;
+        }
+      } catch (e) {
+        console.log('日期解析错误:', e);
       }
       
       return {
@@ -50,7 +59,7 @@ module.exports = async (req, res) => {
 
     res.status(200).json({ 
       ok: true, 
-      rows: rows.reverse(), // 最新的订单在前
+      rows: rows.reverse(),
       total: totalRevenue,
       dailyTotal: dailyTotal
     });
