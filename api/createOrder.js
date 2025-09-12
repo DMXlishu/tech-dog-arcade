@@ -1,13 +1,17 @@
 const { readOrders, writeOrders, generateOrderNum } = require('../lib/data');
 
 module.exports = async (req, res) => {
-  // CORS头
+  // 设置CORS头
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST,OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  
+  // 处理预检请求
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
 
-  if (req.method === 'OPTIONS') return res.status(200).end();
-
+  // 只允许POST请求
   if (req.method !== 'POST') {
     return res.status(405).json({ ok: false, msg: '仅支持POST请求' });
   }
@@ -22,7 +26,8 @@ module.exports = async (req, res) => {
 
     const { price, time } = body;
 
-    if (!price || !time) {
+    // 验证参数
+    if (price === undefined || time === undefined) {
       return res.status(400).json({ ok: false, msg: '缺少参数' });
     }
 
@@ -35,7 +40,7 @@ module.exports = async (req, res) => {
       orderNum: orderNum,
       price: parseInt(price),
       time: parseInt(time),
-      planType: price === 10 ? 1 : 2,
+      planType: parseInt(price) === 10 ? 1 : 2,
       date: now.toLocaleString('zh-CN'),
       status: 'queue',
       createdAt: now.toISOString()
@@ -44,6 +49,7 @@ module.exports = async (req, res) => {
     orders.push(newOrder);
     
     if (writeOrders(orders)) {
+      // 计算排队信息
       const queueOrders = orders.filter(order => order.status === 'queue');
       const ahead = queueOrders.filter(order => order.id < newOrder.id).length;
       const waitTime = Math.ceil(ahead * 10);
