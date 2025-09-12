@@ -1,34 +1,49 @@
-const fs = require('fs');
-const path = require('path');
+const { readOrders } = require('../lib/data');
 
-const ORDERS_FILE = path.join(__dirname, '../orders.json');
 const PASSWORD = '8888';
 
-function readj(f) {
-  try { return JSON.parse(fs.readFileSync(f, 'utf8')) } catch (e) { return [] }
-}
+module.exports = async (req, res) => {
+  // 处理预检请求
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
 
-module.exports = (req, res) => {
-  // ===== CORS 必须放在最前面 =====
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST,OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  // 只允许POST请求
+  if (req.method !== 'POST') {
+    return res.status(405).json({ ok: false, msg: '仅支持POST请求' });
+  }
 
-  if (req.method === 'OPTIONS') return res.status(200).end(); // 预检
+  try {
+    const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
+    
+    // 验证密码
+    if (body.password !== PASSWORD) {
+      return res.status(401).json({ ok: false, msg: '密码错误' });
+    }
 
-  if (req.method !== 'POST') return res.status(405).json({ ok: false, msg: '仅支持POST' });
-  if (req.body.password !== PASSWORD) return res.status(401).json({ ok: false, msg: '密码错误' });
+    const orders = readOrders();
+    let totalRevenue = 0;
+    
+    const rows = orders.map((order, index) => {
+      totalRevenue += order.price;
+      return {
+        id: index + 1,
+        date: order.date,
+        orderNum: order.orderNum,
+        plan: `${order.price}元/${order.time}分钟`,
+        price: order.price,
+        total: totalRevenue
+      };
+    });
 
-  const rows = readj(ORDERS_FILE).map((r, idx) => ({
-    id: idx + 1,
-    date: r.date,
-    orderNum: r.orderNum,
-    plan: r.plan,
-    price: r.price,
-    total: 0
-  }));
-  let total = 0;
-  rows.forEach(r => { total += r.price; r.total = total; });
+    res.status(200).json({ 
+      ok: true, 
+      rows: rows.reverse(), // 最新的订单在前
+      total: totalRevenue 
+    });
 
-  res.json({ rows, total });
+  } catch (error) {
+    console.error('Admin API错误:', error);
+    res.status(500).json({ ok: false, msg: '服务器内部错误' });
+  }
 };
