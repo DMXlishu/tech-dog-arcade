@@ -2,120 +2,82 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<title>管理员后台 - 技术狗街机</title>
+<title>机器狗 - 管理系统</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
-body{margin:0;padding:20px;background:#f7f7f7;font-family:-apple-system,BlinkMacSystemFont,"Helvetica Neue",Arial;color:#333}
-h1{font-size:24px;margin-bottom:10px}
-button{cursor:pointer;padding:8px 14px;font-size:14px;border:1px solid #ccc;border-radius:4px;background:#fff}
-button.danger{background:#ff4d4f;color:#fff;border-color:#ff4d4f}
-table{width:100%;border-collapse:collapse;margin-top:10px}
-th,td{border:1px solid #aaa;padding:6px 4px;font-size:13px;text-align:center}
-th{background:#eee}
-tr:first-child td.orderNum{color:red;font-weight:bold}
-#sum{margin-top:10px;font-weight:bold}
-#pwdBox{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center}
-#pwdBox .box{background:#fff;border-radius:8px;padding:25px 30px;min-width:260px;text-align:center}
-#pwdBox input{width:100%;padding:8px;margin:8px 0;border:1px solid #ccc;border-radius:4px}
-#msg{color:#ff4d4f;height:20px;font-size:13px;margin-bottom:6px}
+/*========== 基础 ==========*/
+*{box-sizing:border-box;margin:0;padding:0}
+body{display:flex;flex-direction:column;height:100vh;background:#f7f7f7;font-family:-apple-system,"Helvetica Neue",Arial;padding:20px;}
+.header{text-align:center;margin-bottom:20px;padding:15px;background:#fff;border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,0.1)}
+.header h1{margin:0;color:#333;font-size:24px}
+
+/*========== 控制面板 ==========*/
+.control-panel{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:15px;margin-bottom:20px}
+.control-btn{padding:12px;background:#fff;border:2px solid #000;border-radius:8px;text-align:center;cursor:pointer;font-weight:bold;transition:all 0.3s}
+.control-btn:hover{background:#000;color:#fff;transform:translateY(-2px)}
+.control-btn.refresh{background:#1890ff;color:#fff;border-color:#1890ff}
+.control-btn.clear{background:#ff4d4f;color:#fff;border-color:#ff4d4f}
+
+/*========== 数据统计 ==========*/
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:15px;margin-bottom:20px}
+.stat-card{padding:15px;background:#fff;border-radius:8px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,0.1)}
+.stat-card h3{margin:0 0 10px 0;font-size:14px;color:#666}
+.stat-card .value{font-size:24px;font-weight:bold;color:#000}
+
+/*========== 表格样式 ==========*/
+.table-container{flex:1;overflow:auto;background:#fff;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.1)}
+table{width:100%;border-collapse:collapse}
+th,td{border:1px solid #e8e8e8;padding:12px 8px;text-align:center;font-size:14px}
+th{background:#fafafa;font-weight:bold;position:sticky;top:0}
+tr:hover{background:#f5f5f5}
+tr:first-child td{background:#fff2e8;font-weight:bold}
+tr:first-child td.orderNum{color:#ff4d4f}
+td.orderNum{font-weight:bold}
+
+/*========== 加载和错误状态 ==========*/
+.loading{text-align:center;padding:40px;font-size:16px;color:#666}
+.loading::after{content:"";display:inline-block;width:20px;height:20px;border:3px solid #f3f3f3;border-top:3px solid #000;border-radius:50%;animation:spin 1s linear infinite;margin-left:10px}
+.error{text-align:center;padding:40px;color:#ff4d4f;font-size:16px}
+@keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
+
+/*========== 响应式设计 ==========*/
+@media (max-width: 768px){
+    .control-panel{grid-template-columns:1fr 1fr}
+    .stats{grid-template-columns:1fr 1fr}
+    th,td{padding:8px 4px;font-size:12px}
+    .header h1{font-size:20px}
+}
+@media (max-width: 480px){
+    .control-panel{grid-template-columns:1fr}
+    .stats{grid-template-columns:1fr}
+}
 </style>
 </head>
 <body>
-<h1>管理员后台</h1>
-<button id="clearBtn" class="danger">一键清除数据</button>
-
-<table id="adminTable">
-  <thead><tr><th>编号</th><th>日期</th><th>订单号</th><th>套餐</th><th>本单收益</th><th>总收益</th></tr></thead>
-  <tbody></tbody>
-</table>
-<div id="sum"></div>
-
-<!-- 密码框 -->
-<div id="pwdBox">
-  <div class="box">
-    <h3>输入管理密码</h3>
-    <div id="msg"></div>
-    <input id="pwdInp" type="password" placeholder="密码" />
-    <button id="pwdBtn">确认</button>
-  </div>
+<div class="header">
+    <h1>🐕 机器狗管理系统</h1>
+    <p>实时监控订单和收益情况</p>
 </div>
 
-<!-- 清除确认 -->
-<div id="clearSure" style="display:none">
-  <p>确定清空所有数据？编号将重新从 1 开始且<strong>不可恢复</strong>！</p>
-  <button id="sureBtn" class="danger">确定</button>
-  <button onclick="hideClear()">取消</button>
+<div class="control-panel">
+    <div class="control-btn refresh" onclick="loadData()">
+        🔄 刷新数据
+    </div>
+    <div class="control-btn" onclick="exportData()">
+        📊 导出数据
+    </div>
+    <div class="control-btn clear" onclick="clearData()">
+        🗑️ 清除数据
+    </div>
 </div>
 
-<script>
-/* ⚠️ 改成你 Vercel 控制台里真实的域名 ⚠️ */
-const API_BASE = 'https://tech-dog-arcade-1-git-main-dmxlishus-projects.vercel.app';
-
-/* ========== 密码验证 + Enter 快捷 ========== */
-const pwdInp = document.getElementById('pwdInp');
-const msg = document.getElementById('msg');
-
-async function checkPwd() {
-  const pwd = pwdInp.value.trim();
-  if (!pwd) return msg.textContent = '请输入密码';
-  msg.textContent = '';
-  try {
-    const res = await fetch(`${API_BASE}/api/admin`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ password: pwd })
-    });
-    if (!res.ok) throw new Error('网络错误');
-    const data = await res.json();
-    if (data.ok === false) { msg.textContent = '密码错误'; return; }
-    // 正确
-    document.getElementById('pwdBox').style.display = 'none';
-    loadAdmin(data);
-  } catch (e) {
-    msg.textContent = '网络失败，请重试';
-  }
-}
-
-document.getElementById('pwdBtn').onclick = checkPwd;
-pwdInp.addEventListener('keydown', e => { if (e.key === 'Enter') checkPwd(); });
-
-/* ========== 加载后台数据 ========== */
-async function loadAdmin(data) {
-  const tbody = document.querySelector('#adminTable tbody');
-  tbody.innerHTML = '';
-  data.rows.forEach((r, i) => {
-    const tr = document.createElement('tr');
-    if (i === 0) tr.classList.add('firstRow');
-    tr.innerHTML = `
-      <td>${r.id}</td>
-      <td>${r.date}</td>
-      <td class="orderNum">${r.orderNum}</td>
-      <td>${r.plan}</td>
-      <td>${r.price}元</td>
-      <td>${r.total}元</td>`;
-    tbody.appendChild(tr);
-  });
-  document.getElementById('sum').textContent = `总收益：${data.total} 元`;
-}
-
-/* ========== 一键清除 ========== */
-document.getElementById('clearBtn').onclick = () => {
-  document.getElementById('clearSure').style.display = 'block';
-};
-function hideClear() {
-  document.getElementById('clearSure').style.display = 'none';
-}
-document.getElementById('sureBtn').onclick = async () => {
-  try {
-    const res = await fetch(`${API_BASE}/api/clear`, { method: 'POST' });
-    const data = await res.json();
-    alert(data.ok ? '已清空！' : '清空失败');
-    hideClear();
-    location.reload(); // 重新加载页面
-  } catch (e) {
-    alert('网络错误，请重试');
-  }
-};
-</script>
-</body>
-</html>
+<div class="stats">
+    <div class="stat-card">
+        <h3>今日订单</h3>
+        <div class="value" id="todayOrders">0</div>
+    </div>
+    <div class="stat-card">
+        <h3>总收益</h3>
+        <div class="value" id="totalRevenue">0元</div>
+    </div>
+    <div class="stat-card
