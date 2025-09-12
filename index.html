@@ -30,7 +30,7 @@ body{display:flex;flex-direction:column;min-height:100vh;background:linear-gradi
 .pay-btn:active{transform:translateY(-1px);}
 
 /*========== 实时信息栏 ==========*/
-.live-info{position:fixed;bottom:120px;left:50%;transform:translateX(-50%);background:linear-gradient(45deg, #FFD700, #FFA500);border:3px solid #000;border-radius:15px;padding:15px 30px;text-align:center;font-size:1.1rem;font-weight:bold;color:#000;box-shadow:0 5px 20px rgba(0,0,0,0.3);z-index:100;min-width:300px;}
+.live-info{position:fixed;bottom:160px;left:50%;transform:translateX(-50%);background:linear-gradient(45deg, #FFD700, #FFA500);border:3px solid #000;border-radius:15px;padding:15px 30px;text-align:center;font-size:1.1rem;font-weight:bold;color:#000;box-shadow:0 5px 20px rgba(0,0,0,0.3);z-index:100;min-width:300px;}
 
 /*========== 底部导航和按钮 ==========*/
 .tabbar{display:flex;height:60px;background:#fff;border-top:3px solid #000;position:fixed;bottom:0;left:0;right:0;z-index:1000;}
@@ -51,6 +51,16 @@ body{display:flex;flex-direction:column;min-height:100vh;background:linear-gradi
 .modal-content button.primary{background:#000;color:#fff;border-color:#000;}
 .modal-content button:hover{transform:translateY(-2px);box-shadow:0 5px 15px rgba(0,0,0,0.1);}
 
+/*========== 页面内容 ==========*/
+.page{display:none;width:100%;max-width:600px;margin:0 auto;background:rgba(255,255,255,0.95);border-radius:15px;padding:30px;box-shadow:0 10px 30px rgba(0,0,0,0.2);}
+.page.active{display:block;}
+#home{display:block;}
+
+/*========== 我的页面调试按钮 ==========*/
+.debug-buttons{display:grid;grid-template-columns:1fr 1fr;gap:15px;margin:20px 0;}
+.debug-btn{padding:12px;background:linear-gradient(45deg, #ff6b6b, #ee5a24);border:none;border-radius:8px;color:white;font-weight:bold;cursor:pointer;border:2px solid #000;}
+.debug-btn:hover{transform:translateY(-2px);}
+
 /*========== 加载动画 ==========*/
 .loading{display:inline-block;width:25px;height:25px;border:3px solid #f3f3f3;border-top:3px solid #000;border-radius:50%;animation:spin 1s linear infinite;margin:0 10px;}
 @keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
@@ -62,43 +72,76 @@ body{display:flex;flex-direction:column;min-height:100vh;background:linear-gradi
     .payment-buttons{grid-template-columns:1fr;}
     .pay-btn{padding:12px 20px;font-size:1rem;}
     .btn-fixed .btn{width:130px;height:45px;line-height:45px;font-size:1rem;}
-    .live-info{font-size:1rem;padding:12px 20px;min-width:250px;}
+    .live-info{font-size:1rem;padding:12px 20px;min-width:250px;bottom:140px;}
+    .debug-buttons{grid-template-columns:1fr;}
 }
-
-/*========== 页面内容 ==========*/
-.page{display:none;width:100%;}
-.page.active{display:block;}
-#home{display:block;}
 </style>
 </head>
 <body>
 <!-- 主容器 -->
 <div class="container">
-    <!-- 标题 -->
-    <div class="header">
-        <h1>🤖 机器狗智能游乐场</h1>
-        <p>扫码取号 · 智能排队 · 畅快体验</p>
+    <!-- 首页 -->
+    <div id="home" class="page active">
+        <div class="header">
+            <h1>🤖 机器狗智能游乐场</h1>
+            <p>扫码取号 · 智能排队 · 畅快体验</p>
+        </div>
+
+        <!-- 视频区域 -->
+        <div class="video-container">
+            <video src="video1.mp4" controls poster="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 600 400'%3E%3Crect width='600' height='400' fill='%23f0f0f0'/%3E%3Cpath d='M240,200 L360,200 L300,150 Z' fill='%23ccc'/%3E%3C/svg%3E">
+                您的浏览器不支持视频播放
+            </video>
+            <div class="video-desc">观看机器狗精彩表演和操作演示</div>
+        </div>
+
+        <!-- 支付测试区域 -->
+        <div class="payment-section">
+            <h3>🎯 测试支付功能</h3>
+            <p>点击下方按钮模拟支付成功，测试服务器响应</p>
+            <div class="payment-buttons">
+                <button class="pay-btn" onclick="simulatePay(1)">
+                    💰 10元 / 30分钟
+                </button>
+                <button class="pay-btn" onclick="simulatePay(2)">
+                    💰 5元 / 10分钟
+                </button>
+            </div>
+        </div>
     </div>
 
-    <!-- 视频区域 -->
-    <div class="video-container">
-        <video src="video1.mp4" controls poster="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 600 400'%3E%3Crect width='600' height='400' fill='%23f0f0f0'/%3E%3Cpath d='M240,200 L360,200 L300,150 Z' fill='%23ccc'/%3E%3C/svg%3E">
-            您的浏览器不支持视频播放
-        </video>
-        <div class="video-desc">观看机器狗精彩表演和操作演示</div>
+    <!-- 我的页面 -->
+    <div id="my" class="page">
+        <h2>👤 我的账户</h2>
+        <p>订单记录和个人信息管理</p>
+        
+        <div class="debug-buttons">
+            <button class="debug-btn" onclick="simulatePay(1)">
+                🧪 测试套餐1 (10元)
+            </button>
+            <button class="debug-btn" onclick="simulatePay(2)">
+                🧪 测试套餐2 (5元)
+            </button>
+        </div>
+        
+        <div style="margin-top:30px;text-align:center;">
+            <p>更多功能开发中...</p>
+        </div>
     </div>
 
-    <!-- 支付测试区域 -->
-    <div class="payment-section">
-        <h3>🎯 测试支付功能</h3>
-        <p>点击下方按钮模拟支付成功，测试服务器响应</p>
-        <div class="payment-buttons">
-            <button class="pay-btn" onclick="simulatePay(1)">
-                💰 10元 / 30分钟
-            </button>
-            <button class="pay-btn" onclick="simulatePay(2)">
-                💰 5元 / 10分钟
-            </button>
+    <!-- 用户协议页面 -->
+    <div id="agreement" class="page">
+        <h2>📝 用户协议</h2>
+        <p>机器狗游玩须知和免责条款</p>
+        
+        <div style="margin-top:20px;">
+            <h3>安全须知</h3>
+            <p>1. 请勿触摸机器狗的运动部件</p>
+            <p>2. 儿童需在成人陪同下使用</p>
+            <p>3. 遵守现场工作人员指示</p>
+            
+            <h3>免责声明</h3>
+            <p>因不当操作造成的损坏需照价赔偿</p>
         </div>
     </div>
 </div>
@@ -121,6 +164,27 @@ body{display:flex;flex-direction:column;min-height:100vh;background:linear-gradi
     <div class="item" data-page="agreement">📝 协议</div>
 </nav>
 
+<!-- 选择操作弹窗 -->
+<div class="modal" id="modalFirst">
+    <div class="modal-content">
+        <h3>🎮 选择操作</h3>
+        <button id="watchVideoBtn" class="primary">📺 观看教学视频</button>
+        <button id="directPlayBtn">🎯 直接开始玩</button>
+        <button onclick="closeModal('modalFirst')">取消</button>
+    </div>
+</div>
+
+<!-- 支付方式弹窗 -->
+<div class="modal" id="modalPay">
+    <div class="modal-content">
+        <h3>💳 选择支付方式</h3>
+        <button onclick="redirectToPay('wechat')">💚 微信支付</button>
+        <button onclick="redirectToPay('alipay')">💙 支付宝</button>
+        <button onclick="redirectToPay('bank')">💳 银行卡</button>
+        <button onclick="closeModal('modalPay')">返回</button>
+    </div>
+</div>
+
 <!-- 排队中弹窗 -->
 <div class="modal" id="modalQueue">
     <div class="modal-content">
@@ -129,7 +193,7 @@ body{display:flex;flex-direction:column;min-height:100vh;background:linear-gradi
         <p>您的编号：<strong id="queueNum">----</strong></p>
         <p>前面还有 <strong id="queueAhead">--</strong> 人</p>
         <p>预计等待：<strong id="queueTime">--:--</strong></p>
-        <div class="loading" id="queueLoading" style="margin:15px auto;"></div>
+        <div class="loading" id="queueLoading" style="margin:15px auto;display:none;"></div>
         <button onclick="closeModal('modalQueue')" class="primary">👌 知道了</button>
     </div>
 </div>
@@ -137,6 +201,20 @@ body{display:flex;flex-direction:column;min-height:100vh;background:linear-gradi
 <script>
 // 全局变量
 let refreshInterval = null;
+let currentPrice = 0;
+let currentTime = 0;
+
+/*========== 页面切换 ==========*/
+document.querySelectorAll('.tabbar .item').forEach(btn => {
+    btn.addEventListener('click', function(){
+        document.querySelectorAll('.tabbar .item').forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+        
+        document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
+        const pageId = this.dataset.page;
+        document.getElementById(pageId).classList.add('active');
+    });
+});
 
 /*========== 弹窗控制 ==========*/
 function openModal(id){ 
@@ -151,17 +229,55 @@ function closeModal(id){
     }
 }
 function closeAllModal(){ 
-    document.querySelectorAll('.modal').forEach(m=>m.classList.remove('active')); 
+    document.querySelectorAll('.modal').forEach(m => m.classList.remove('active')); 
     if (refreshInterval) {
         clearInterval(refreshInterval);
         refreshInterval = null;
     }
 }
 
+/*========== 我要玩按钮 ==========*/
+document.getElementById('btnWantPlay').addEventListener('click', function() {
+    openModal('modalFirst');
+});
+
+// 观看视频按钮
+document.getElementById('watchVideoBtn').addEventListener('click', function() {
+    closeModal('modalFirst');
+    alert('📺 教学视频功能开发中...');
+});
+
+// 直接玩按钮
+document.getElementById('directPlayBtn').addEventListener('click', function() {
+    closeModal('modalFirst');
+    openModal('modalPay');
+});
+
+/*========== 支付跳转 ==========*/
+function redirectToPay(channel) {
+    const payUrls = {
+        wechat: '请输入微信支付链接',
+        alipay: '请输入支付宝支付链接', 
+        bank: '请输入银行卡支付链接'
+    };
+    
+    if (payUrls[channel].includes('请输入')) {
+        alert('⚠️ 请先配置支付链接');
+        return;
+    }
+    
+    // 模拟支付成功
+    closeModal('modalPay');
+    simulatePay(1); // 默认选择套餐1
+}
+
 /*========== 模拟支付函数 ==========*/
 async function simulatePay(type){
     const price = type === 1 ? 10 : 5;
     const time = type === 1 ? 30 : 10;
+    
+    currentPrice = price;
+    currentTime = time;
     
     console.log(`模拟支付：${price}元/${time}分钟`);
     
@@ -171,7 +287,7 @@ async function simulatePay(type){
     
     try {
         // 模拟网络请求延迟
-        await new Promise(resolve => setTimeout(resolve, 1500));
+        await new Promise(resolve => setTimeout(resolve, 1000));
         
         // 调用创建订单API
         const response = await fetch('/api/createOrder', {
@@ -188,12 +304,8 @@ async function simulatePay(type){
         const data = await response.json();
         
         if(data.ok){
-            // 更新界面信息
             updateQueueInfo(data);
-            
-            // 开始轮询排队状态
             startQueuePolling(data.id);
-            
         } else {
             throw new Error(data.msg || '支付失败');
         }
@@ -234,6 +346,7 @@ function startQueuePolling(orderId){
                 if(data.ahead === 0 || data.status === 'playing'){
                     clearInterval(refreshInterval);
                     refreshInterval = null;
+                    alert('🎉 轮到您玩了！请前往机器狗处');
                 }
             }
         } catch (error) {
@@ -242,27 +355,9 @@ function startQueuePolling(orderId){
     }, 5000);
 }
 
-/*========== 初始化事件监听 ==========*/
+// 初始化
 document.addEventListener('DOMContentLoaded', function() {
     console.log('🤖 机器狗排队系统已启动');
-    
-    // 我要玩按钮
-    document.getElementById('btnWantPlay').addEventListener('click', function() {
-        simulatePay(1); // 默认选择10元套餐
-    });
-    
-    // 底部导航
-    document.querySelectorAll('.tabbar .item').forEach(btn => {
-        btn.addEventListener('click', function(){
-            document.querySelectorAll('.tabbar .item').forEach(b => b.classList.remove('active'));
-            this.classList.add('active');
-        });
-    });
-});
-
-// 错误处理
-window.addEventListener('error', function(e) {
-    console.error('页面错误:', e.error);
 });
 </script>
 </body>
