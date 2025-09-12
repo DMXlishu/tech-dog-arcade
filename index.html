@@ -29,20 +29,21 @@ video{width:100%;max-width:400px}
 /*========== 主页底部实时信息栏 ==========*/
 #liveInfo{position:fixed;bottom:120px;left:0;right:0;background:#ffe58a;border-top:2px solid #000;text-align:center;font-size:16px;font-weight:bold;padding:8px 0;z-index:10}
 
-/*========== 后台表格 ==========*/
-table{width:100%;border-collapse:collapse;margin-top:10px}
-th,td{border:1px solid #aaa;padding:6px 4px;font-size:13px;text-align:center}
-th{background:#eee}
-tr:first-child td.orderNum{color:red;font-weight:bold}
-#adminSum{font-weight:bold;margin-top:8px}
+/*========== 加载动画 ==========*/
+.loading{display:inline-block;width:20px;height:20px;border:3px solid #f3f3f3;border-top:3px solid #000;border-radius:50%;animation:spin 1s linear infinite}
+@keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
 
-/*========== 右下角清除按钮 ==========*/
-#clearBtn{position:fixed;bottom:80px;right:20px;background:#ff4d4f;color:#fff;border:none;border-radius:6px;padding:8px 12px;font-size:13px;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.3)}
+/*========== 响应式设计 ==========*/
+@media (max-width: 768px){
+    .btn-fixed .btn{width:120px;height:40px;line-height:40px;font-size:14px}
+    .modal-content{padding:20px;min-width:250px}
+    #liveInfo{font-size:14px;bottom:110px}
+}
 </style>
 </head>
 <body>
 <!-- 三个页面 -->
-<div id="my"   class="page"><h2>我的</h2><p>登录/订单记录等</p></div>
+<div id="my" class="page"><h2>我的</h2><p>登录/订单记录等</p></div>
 <div id="home" class="page active">
     <h2>首页</h2>
     <video src="video1.mp4" controls width="100%"></video>
@@ -107,37 +108,40 @@ tr:first-child td.orderNum{color:red;font-weight:bold}
     <p>您的编号：<span id="queueNum">----</span></p>
     <p>前面还有 <span id="queueAhead">--</span> 人</p>
     <p>预计等待时间：<span id="queueTime">--:--</span></p>
+    <div id="queueLoading" class="loading" style="margin:10px auto;display:none"></div>
     <button onclick="closeModal('modalQueue')">关闭</button>
 </div></div>
 
-<!-- 6. 后台表格 -->
-<div class="modal" id="modalAdmin"><div class="modal-content" style="min-width:90%;max-height:80vh;overflow-y:auto">
-    <h3>每日订单 & 收益</h3>
-    <table id="adminTable">
-        <thead><tr><th>编号</th><th>日期</th><th>订单号</th><th>套餐</th><th>本单收益</th><th>总收益</th></tr></thead>
-        <tbody></tbody>
-    </table>
-    <div id="adminSum"></div>
-    <button onclick="closeModal('modalAdmin')">关闭</button>
-</div></div>
-
-<!-- 7. 清除数据确认 -->
-<div class="modal" id="modalClear"><div class="modal-content">
-    <h3>确定清除所有数据？</h3>
-    <p>编号将重新从 1 开始，总收益归零且不可恢复！</p>
-    <button onclick="clearData()" class="primary">确定</button>
-    <button onclick="closeModal('modalClear')">取消</button>
-</div></div>
-
-<!-- 右下角清除按钮 -->
-<button id="clearBtn" onclick="openModal('modalClear')">一键清除数据</button>
-
 <script>
+// 全局变量
+let currentPrice = 0;
+let currentTime = 0;
+let refreshInterval = null;
+
 /*========== 工具：打开 / 关闭弹窗 ==========*/
-function openModal(id){ closeAllModal(); document.getElementById(id).classList.add('active'); }
-function closeModal(id){ document.getElementById(id).classList.remove('active'); }
-function closeAllModal(){ document.querySelectorAll('.modal').forEach(m=>m.classList.remove('active')); }
-document.querySelectorAll('.modal').forEach(modal=>{ modal.addEventListener('click',function(e){ if(e.target===modal) closeModal(modal.id); }); });
+function openModal(id){ 
+    closeAllModal(); 
+    document.getElementById(id).classList.add('active'); 
+}
+function closeModal(id){ 
+    document.getElementById(id).classList.remove('active'); 
+    if (id === 'modalQueue' && refreshInterval) {
+        clearInterval(refreshInterval);
+        refreshInterval = null;
+    }
+}
+function closeAllModal(){ 
+    document.querySelectorAll('.modal').forEach(m=>m.classList.remove('active')); 
+    if (refreshInterval) {
+        clearInterval(refreshInterval);
+        refreshInterval = null;
+    }
+}
+document.querySelectorAll('.modal').forEach(modal=>{ 
+    modal.addEventListener('click',function(e){ 
+        if(e.target===modal) closeModal(modal.id); 
+    }); 
+});
 
 /*========== 底部导航切换 ==========*/
 document.querySelectorAll('.tabbar .item').forEach(btn=>{
@@ -146,7 +150,6 @@ document.querySelectorAll('.tabbar .item').forEach(btn=>{
         this.classList.add('active');
         document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
         document.getElementById(this.dataset.page).classList.add('active');
-        if(this.dataset.page==='my'){ loadAdmin(); openModal('modalAdmin'); } // 进入“我的”=后台
     });
 });
 
@@ -156,86 +159,110 @@ document.getElementById('watchVideoBtn').onclick = ()=>{ closeModal('modalFirst'
 document.getElementById('directPlayBtn').onclick = ()=>{ closeModal('modalFirst'); openModal('modalPrice'); };
 
 /*========== 支付流程 ==========*/
-let currentPrice=0, currentTime=0;
 document.querySelectorAll('#modalPrice button[data-price]').forEach(btn=>{
     btn.addEventListener('click',function(){
-        currentPrice = this.dataset.price;
-        currentTime  = this.dataset.time;
+        currentPrice = parseInt(this.dataset.price);
+        currentTime  = parseInt(this.dataset.time);
         closeModal('modalPrice');
         openModal('modalPay');
     });
 });
+
 document.querySelectorAll('.payOption').forEach(btn=>{
-    btn.addEventListener('click',function(){
+    btn.addEventListener('click',async function(){
         const channel = this.dataset.channel;
-        /* 此处放真实支付链接 */
-        if(channel==='wechat')  location.href='【这里放微信支付链接】';
-        if(channel==='alipay')  location.href='【这里放支付宝链接】';
-        if(channel==='bank')    location.href='【这里放银行卡链接】';
-        // 演示：直接当成功
+        const loadingElem = document.getElementById('queueLoading');
+        const closeBtn = document.querySelector('#modalQueue button');
+        
         closeModal('modalPay');
-        createOrder(currentPrice,currentTime);
+        openModal('modalQueue');
+        loadingElem.style.display = 'block';
+        closeBtn.style.display = 'none';
+        
+        try {
+            // 模拟支付处理时间
+            await new Promise(resolve => setTimeout(resolve, 1500));
+            await createOrder(currentPrice, currentTime);
+        } catch (error) {
+            alert('支付失败：' + error.message);
+        } finally {
+            loadingElem.style.display = 'none';
+            closeBtn.style.display = 'block';
+        }
     });
 });
 
 /*========== 模拟支付按钮（测试用） ==========*/
-function simulatePay(type){
+async function simulatePay(type){
     const price = type===1?10:5;
     const time  = type===1?30:10;
-    createOrder(price,time);
+    
+    openModal('modalQueue');
+    const loadingElem = document.getElementById('queueLoading');
+    const closeBtn = document.querySelector('#modalQueue button');
+    loadingElem.style.display = 'block';
+    closeBtn.style.display = 'none';
+    
+    try {
+        await createOrder(price, time);
+    } catch (error) {
+        alert('支付失败：' + error.message);
+    } finally {
+        loadingElem.style.display = 'none';
+        closeBtn.style.display = 'block';
+    }
 }
 
 /*========== 创建订单 → 排队 ==========*/
-async function createOrder(price,time){
-    const res = await fetch('/api/createOrder',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({price,time})});
-    const data = await res.json();
-    if(data.ok){
-        updateLiveInfo(data);
-        openModal('modalQueue');
-        // 每5秒刷新一次排队信息
-        const t = setInterval(async ()=>{
-            const r = await fetch('/api/queueInfo?id='+data.id);
-            const d = await r.json();
-            if(d.ok){ updateLiveInfo(d); }else{ clearInterval(t); }
-        },5000);
-    }else{
-        alert('订单创建失败：'+data.msg);
+async function createOrder(price, time){
+    try {
+        const res = await fetch('/api/createOrder', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ price, time })
+        });
+        
+        const data = await res.json();
+        
+        if(data.ok){
+            updateLiveInfo(data);
+            
+            // 每5秒刷新一次排队信息
+            if (refreshInterval) clearInterval(refreshInterval);
+            refreshInterval = setInterval(async ()=>{
+                try {
+                    const r = await fetch('/api/queueInfo?id=' + data.id);
+                    const d = await r.json();
+                    if(d.ok){ 
+                        updateLiveInfo(d); 
+                    } else { 
+                        clearInterval(refreshInterval);
+                        refreshInterval = null;
+                    }
+                } catch (error) {
+                    console.error('刷新排队信息失败:', error);
+                }
+            }, 5000);
+        } else {
+            throw new Error(data.msg || '订单创建失败');
+        }
+    } catch (error) {
+        closeModal('modalQueue');
+        throw error;
     }
 }
+
 function updateLiveInfo(d){
-    document.getElementById('queueNum').textContent  = d.orderNum;
-    document.getElementById('queueAhead').textContent= d.ahead;
+    document.getElementById('queueNum').textContent = d.orderNum;
+    document.getElementById('queueAhead').textContent = d.ahead;
     document.getElementById('queueTime').textContent = d.waitTime;
-    document.getElementById('liveInfo').textContent  = `当前编号${d.orderNum}，还有${d.ahead}人，预计排队${d.waitTime}`;
+    document.getElementById('liveInfo').textContent = `当前编号${d.orderNum}，还有${d.ahead}人，预计排队${d.waitTime}`;
 }
 
-/*========== 后台表格加载 ==========*/
-async function loadAdmin(){
-    const res = await fetch('/api/admin');
-    const data = await res.json();
-    const tbody = document.querySelector('#adminTable tbody');
-    tbody.innerHTML='';
-    data.rows.forEach((r,i)=>{
-        const tr = document.createElement('tr');
-        if(i===0) tr.classList.add('firstRow');
-        tr.innerHTML=`
-            <td>${r.id}</td>
-            <td>${r.date}</td>
-            <td class="orderNum">${r.orderNum}</td>
-            <td>${r.plan}</td>
-            <td>${r.price}元</td>
-            <td>${r.total}元</td>`;
-        tbody.appendChild(tr);
-    });
-    document.getElementById('adminSum').textContent = `总收益：${data.total} 元`;
-}
-
-/*========== 一键清除数据 ==========*/
-async function clearData(){
-    const res = await fetch('/api/clear',{method:'POST'});
-    const data = await res.json();
-    if(data.ok){ alert('已清空！'); closeModal('modalClear'); loadAdmin(); }
-}
+// 页面加载时初始化
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('机器狗排队系统客户端已加载');
+});
 </script>
 </body>
 </html>
