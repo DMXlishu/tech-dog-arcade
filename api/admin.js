@@ -14,12 +14,8 @@ module.exports = (req, res) => {
   res.setHeader('Access-Control-Allow-Methods', 'POST,OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
-  // 预检请求
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
+  if (req.method === 'OPTIONS') return res.status(200).end(); // 预检
 
-  // 原逻辑
   if (req.method !== 'POST') return res.status(405).json({ ok: false, msg: '仅支持POST' });
   if (req.body.password !== PASSWORD) return res.status(401).json({ ok: false, msg: '密码错误' });
 
