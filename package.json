@@ -2,12 +2,6 @@
   "name": "tech-dog-arcade",
   "version": "1.0.0",
   "engines": {
-    "node": "22.x"
-  },
-  "scripts": {
-    "dev": "vercel dev"
-  },
-  "dependencies": {
-    "@vercel/node": "^3.0.0"
+    "node": "18.x"
   }
 }
