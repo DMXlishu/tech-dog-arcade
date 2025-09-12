@@ -392,58 +392,88 @@ async function simulatePay(type){
     const price = type === 1 ? 10 : 5;
     const time = type === 1 ? 30 : 10;
     
-    currentPrice = price;
-    currentTime = time;
-    
     console.log(`模拟支付：${price}元/${time}分钟`);
     
-    // 显示排队弹窗
     openModal('modalQueue');
     document.getElementById('queueLoading').style.display = 'block';
     
     try {
-        // 模拟网络请求延迟
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        // 调用创建订单API
+        // 先尝试调用真实API
         const response = await fetch('/api/createOrder', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                price: price,
-                time: time
-            })
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ price, time })
         });
         
-        const data = await response.json();
-        
-        if(data.ok){
-            updateQueueInfo(data);
-            startQueuePolling(data.id);
-        } else {
-            throw new Error(data.msg || '支付失败');
+        if (response.ok) {
+            const data = await response.json();
+            if (data.ok) {
+                updateQueueInfo(data);
+                startQueuePolling(data.id);
+                return;
+            }
         }
         
+        // 如果API失败，使用模拟数据
+        console.log('API连接失败，使用模拟模式');
+        const mockData = {
+            ok: true,
+            id: Date.now(),
+            orderNum: Math.floor(Math.random() * 50) + 1,
+            ahead: Math.floor(Math.random() * 8) + 2,
+            waitTime: `${Math.floor(Math.random() * 20) + 10}分钟`
+        };
+        
+        updateQueueInfo(mockData);
+        startMockQueuePolling(mockData.id);
+        
     } catch (error) {
-        console.error('支付错误:', error);
-        alert('❌ ' + error.message);
-        closeModal('modalQueue');
+        console.log('使用模拟数据:', error.message);
+        
+        // 模拟数据
+        const mockData = {
+            ok: true,
+            id: Date.now(),
+            orderNum: Math.floor(Math.random() * 50) + 1,
+            ahead: Math.floor(Math.random() * 8) + 2,
+            waitTime: `${Math.floor(Math.random() * 20) + 10}分钟`
+        };
+        
+        updateQueueInfo(mockData);
+        startMockQueuePolling(mockData.id);
     } finally {
         document.getElementById('queueLoading').style.display = 'none';
     }
 }
 
-/*========== 更新排队信息 ==========*/
-function updateQueueInfo(data){
-    document.getElementById('queueNum').textContent = data.orderNum || '0001';
-    document.getElementById('queueAhead').textContent = data.ahead || '0';
-    document.getElementById('queueTime').textContent = data.waitTime || '立即';
+/*========== 模拟排队轮询 ==========*/
+function startMockQueuePolling(orderId) {
+    if (refreshInterval) clearInterval(refreshInterval);
     
-    // 更新底部实时信息
-    const liveInfo = document.getElementById('liveInfo');
-    liveInfo.innerHTML = `📍 当前编号：${data.orderNum || '0001'} | 排队：${data.ahead || '0'}人 | 预计：${data.waitTime || '立即'}`;
+    let ahead = parseInt(document.getElementById('queueAhead').textContent);
+    let countdown = ahead;
+    
+    refreshInterval = setInterval(() => {
+        if (countdown > 0) {
+            countdown--;
+            const mockData = {
+                ok: true,
+                orderNum: document.getElementById('queueNum').textContent,
+                ahead: countdown,
+                waitTime: `${countdown * 2}分钟`
+            };
+            updateQueueInfo(mockData);
+            
+            if (countdown === 0) {
+                clearInterval(refreshInterval);
+                refreshInterval = null;
+                setTimeout(() => {
+                    alert('🎉 轮到您玩了！请前往机器狗处');
+                    closeModal('modalQueue');
+                }, 1000);
+            }
+        }
+    }, 2000);
 }
 
 /*========== 排队状态轮询 ==========*/
@@ -464,11 +494,28 @@ function startQueuePolling(orderId){
                     refreshInterval = null;
                     alert('🎉 轮到您玩了！请前往机器狗处');
                 }
+            } else {
+                // 如果API失败，切换到模拟模式
+                clearInterval(refreshInterval);
+                startMockQueuePolling(orderId);
             }
         } catch (error) {
-            console.error('轮询错误:', error);
+            console.error('轮询错误，切换到模拟模式:', error);
+            clearInterval(refreshInterval);
+            startMockQueuePolling(orderId);
         }
     }, 5000);
+}
+
+/*========== 更新排队信息 ==========*/
+function updateQueueInfo(d){
+    document.getElementById('queueNum').textContent = d.orderNum || '0001';
+    document.getElementById('queueAhead').textContent = d.ahead || '0';
+    document.getElementById('queueTime').textContent = d.waitTime || '立即';
+    
+    // 更新底部实时信息
+    const liveInfo = document.getElementById('liveInfo');
+    liveInfo.innerHTML = `📍 当前编号：${d.orderNum || '0001'} | 排队：${d.ahead || '0'}人 | 预计：${d.waitTime || '立即'}`;
 }
 
 // 初始化
