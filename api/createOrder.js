@@ -1,7 +1,7 @@
 const { readOrders, writeOrders, generateOrderNum } = require('../lib/data');
 
 module.exports = async (req, res) => {
-  // CORS 设置
+  // CORS头
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST,OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -13,7 +13,13 @@ module.exports = async (req, res) => {
   }
 
   try {
-    const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
+    let body;
+    try {
+      body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
+    } catch (e) {
+      return res.status(400).json({ ok: false, msg: '无效的JSON数据' });
+    }
+
     const { price, time } = body;
 
     if (!price || !time) {
@@ -29,7 +35,7 @@ module.exports = async (req, res) => {
       orderNum: orderNum,
       price: parseInt(price),
       time: parseInt(time),
-      planType: price === 10 ? 1 : 2, // 记录套餐类型
+      planType: price === 10 ? 1 : 2,
       date: now.toLocaleString('zh-CN'),
       status: 'queue',
       createdAt: now.toISOString()
@@ -38,10 +44,9 @@ module.exports = async (req, res) => {
     orders.push(newOrder);
     
     if (writeOrders(orders)) {
-      // 计算排队信息
       const queueOrders = orders.filter(order => order.status === 'queue');
       const ahead = queueOrders.filter(order => order.id < newOrder.id).length;
-      const waitTime = Math.ceil(ahead * 10); // 假设每人10分钟
+      const waitTime = Math.ceil(ahead * 10);
 
       res.status(200).json({
         ok: true,
