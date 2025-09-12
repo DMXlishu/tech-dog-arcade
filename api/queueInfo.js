@@ -1,50 +1,18 @@
-const { readOrders } = require('../lib/data');
-
-module.exports = async (req, res) => {
-  // 设置CORS头
+export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
-  // 处理预检请求
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
 
-  // 只允许GET请求
-  if (req.method !== 'GET') {
-    return res.status(405).json({ ok: false, msg: '仅支持GET请求' });
-  }
-
-  try {
-    const { id } = req.query;
-    
-    if (!id) {
-      return res.status(400).json({ ok: false, msg: '缺少订单ID' });
-    }
-
-    const orders = readOrders();
-    const order = orders.find(o => o.id === parseInt(id));
-    
-    if (!order) {
-      return res.json({ ok: false, msg: '订单不存在' });
-    }
-
-    // 计算排队信息
-    const queueOrders = orders.filter(o => o.status === 'queue');
-    const ahead = queueOrders.filter(o => o.id < order.id).length;
-    const waitTime = Math.ceil(ahead * 10);
-
-    res.status(200).json({
-      ok: true,
-      orderNum: order.orderNum,
-      ahead,
-      waitTime: `${waitTime}分钟`,
-      status: order.status
-    });
-
-  } catch (error) {
-    console.error('QueueInfo API错误:', error);
-    res.status(500).json({ ok: false, msg: '服务器内部错误' });
-  }
-};
+  // 返回模拟排队信息
+  res.status(200).json({
+    ok: true,
+    orderNum: Math.floor(Math.random() * 100) + 1,
+    ahead: Math.max(0, Math.floor(Math.random() * 10) - 1),
+    waitTime: '10分钟',
+    status: 'queue'
+  });
+}
