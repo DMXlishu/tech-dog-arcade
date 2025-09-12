@@ -1,14 +1,15 @@
 const { readOrders } = require('../lib/data');
 
-const PASSWORD = '8888';
+const PASSWORD = 'qwer123'; // 管理密码
 
 module.exports = async (req, res) => {
-  // 处理预检请求
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
+  // CORS 设置
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST,OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
-  // 只允许POST请求
+  if (req.method === 'OPTIONS') return res.status(200).end();
+
   if (req.method !== 'POST') {
     return res.status(405).json({ ok: false, msg: '仅支持POST请求' });
   }
@@ -23,23 +24,35 @@ module.exports = async (req, res) => {
 
     const orders = readOrders();
     let totalRevenue = 0;
+    let dailyTotal = 0;
+    const today = new Date().toLocaleDateString('zh-CN');
     
+    // 计算收益
     const rows = orders.map((order, index) => {
       totalRevenue += order.price;
+      
+      // 计算今日收益
+      const orderDate = new Date(order.createdAt || order.date).toLocaleDateString('zh-CN');
+      if (orderDate === today) {
+        dailyTotal += order.price;
+      }
+      
       return {
         id: index + 1,
-        date: order.date,
         orderNum: order.orderNum,
-        plan: `${order.price}元/${order.time}分钟`,
+        planType: order.planType || (order.price === 10 ? 1 : 2),
         price: order.price,
-        total: totalRevenue
+        dailyTotal: dailyTotal,
+        total: totalRevenue,
+        date: order.date
       };
     });
 
     res.status(200).json({ 
       ok: true, 
       rows: rows.reverse(), // 最新的订单在前
-      total: totalRevenue 
+      total: totalRevenue,
+      dailyTotal: dailyTotal
     });
 
   } catch (error) {
