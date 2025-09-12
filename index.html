@@ -2,123 +2,143 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<title>机器狗 - 完整排队系统</title>
+<title>机器狗游乐场 - 智能排队系统</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
-/*========== 基础 ==========*/
+/*========== 基础重置 ==========*/
 *{box-sizing:border-box;margin:0;padding:0}
-body{display:flex;flex-direction:column;height:100vh;background:#f7f7f7;font-family:-apple-system,"Helvetica Neue",Arial;}
-.page{flex:1;overflow-y:auto;padding:20px 20px 120px;display:none}
-.page.active{display:block}
-.tabbar{display:flex;height:52px;background:#fff;border-top:1px solid #000}
-.tabbar .item{flex:1;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:15px;color:#333;border-right:1px solid #000}
+body{display:flex;flex-direction:column;min-height:100vh;background:linear-gradient(135deg, #667eea 0%, #764ba2 100%);font-family:-apple-system,"Helvetica Neue",Arial,sans-serif;color:#333;}
+
+/*========== 主容器 ==========*/
+.container{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;max-width:1200px;margin:0 auto;width:100%;}
+
+/*========== 标题样式 ==========*/
+.header{text-align:center;margin-bottom:30px;color:white;text-shadow:2px 2px 4px rgba(0,0,0,0.3);}
+.header h1{font-size:2.5rem;margin-bottom:10px;font-weight:bold;}
+.header p{font-size:1.2rem;opacity:0.9;}
+
+/*========== 视频容器 ==========*/
+.video-container{width:100%;max-width:600px;margin:20px 0;background:rgba(255,255,255,0.95);border-radius:15px;padding:20px;box-shadow:0 10px 30px rgba(0,0,0,0.2);text-align:center;}
+.video-container video{width:100%;border-radius:10px;border:3px solid #fff;box-shadow:0 5px 15px rgba(0,0,0,0.1);}
+.video-desc{margin-top:15px;color:#666;font-size:1rem;}
+
+/*========== 支付按钮区域 ==========*/
+.payment-section{width:100%;max-width:600px;background:rgba(255,255,255,0.95);border-radius:15px;padding:25px;box-shadow:0 10px 30px rgba(0,0,0,0.2);text-align:center;margin:20px 0;}
+.payment-buttons{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:15px;margin:20px 0;}
+.pay-btn{padding:15px 25px;background:linear-gradient(45deg, #FFD700, #FFA500);border:none;border-radius:10px;font-size:1.1rem;font-weight:bold;color:#000;cursor:pointer;transition:all 0.3s ease;box-shadow:0 4px 15px rgba(255,165,0,0.3);border:2px solid #000;}
+.pay-btn:hover{transform:translateY(-3px);box-shadow:0 6px 20px rgba(255,165,0,0.4);}
+.pay-btn:active{transform:translateY(-1px);}
+
+/*========== 实时信息栏 ==========*/
+.live-info{position:fixed;bottom:120px;left:50%;transform:translateX(-50%);background:linear-gradient(45deg, #FFD700, #FFA500);border:3px solid #000;border-radius:15px;padding:15px 30px;text-align:center;font-size:1.1rem;font-weight:bold;color:#000;box-shadow:0 5px 20px rgba(0,0,0,0.3);z-index:100;min-width:300px;}
+
+/*========== 底部导航和按钮 ==========*/
+.tabbar{display:flex;height:60px;background:#fff;border-top:3px solid #000;position:fixed;bottom:0;left:0;right:0;z-index:1000;}
+.tabbar .item{flex:1;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:1rem;font-weight:bold;color:#333;border-right:2px solid #000;transition:all 0.3s ease;}
 .tabbar .item:last-child{border-right:none}
-.tabbar .item.active{background:#000;color:#fff}
-.btn-fixed{position:fixed;bottom:60px;left:0;right:0;display:flex;justify-content:center;gap:20px;pointer-events:none}
-.btn-fixed .btn{pointer-events:auto;width:140px;height:46px;line-height:46px;text-align:center;font-size:16px;font-weight:bold;color:#000;background:#FFD700;border:2px solid #000;border-radius:12px;box-shadow:0 4px 8px rgba(0,0,0,.25),inset 0 -2px 4px rgba(255,255,255,.6),inset 0 2px 4px rgba(0,0,0,.2);cursor:pointer}
+.tabbar .item.active{background:#000;color:#fff;}
 
-/*========== 弹窗通用 ==========*/
-.modal{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;z-index:999}
-.modal.active{display:flex}
-.modal-content{background:#fff;border-radius:10px;padding:25px 30px;min-width:280px;max-width:90%;text-align:center;box-shadow:0 8px 20px rgba(0,0,0,.3)}
-.modal-content h3{margin-bottom:18px;font-size:18px}
-.modal-content button{width:100%;margin:8px 0;padding:10px 0;font-size:15px;border:1px solid #ccc;border-radius:6px;background:#fff;cursor:pointer}
-.modal-content button.primary{background:#000;color:#fff;border:#000}
-video{width:100%;max-width:400px}
+.btn-fixed{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);display:flex;gap:20px;pointer-events:none;z-index:900;}
+.btn-fixed .btn{pointer-events:auto;width:150px;height:50px;line-height:50px;text-align:center;font-size:1.1rem;font-weight:bold;color:#000;background:linear-gradient(45deg, #FFD700, #FFA500);border:3px solid #000;border-radius:12px;box-shadow:0 6px 20px rgba(0,0,0,0.2);cursor:pointer;transition:all 0.3s ease;}
+.btn-fixed .btn:hover{transform:translateY(-3px);box-shadow:0 8px 25px rgba(0,0,0,0.3);}
 
-/*========== 主页底部实时信息栏 ==========*/
-#liveInfo{position:fixed;bottom:120px;left:0;right:0;background:#ffe58a;border-top:2px solid #000;text-align:center;font-size:16px;font-weight:bold;padding:8px 0;z-index:10}
+/*========== 弹窗样式 ==========*/
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.8);display:none;align-items:center;justify-content:center;z-index:2000;backdrop-filter:blur(5px);}
+.modal.active{display:flex;}
+.modal-content{background:#fff;border-radius:20px;padding:30px;width:90%;max-width:400px;text-align:center;box-shadow:0 20px 40px rgba(0,0,0,0.3);border:3px solid #000;}
+.modal-content h3{margin-bottom:20px;font-size:1.5rem;color:#000;}
+.modal-content button{width:100%;margin:10px 0;padding:15px;font-size:1.1rem;border:2px solid #ccc;border-radius:10px;background:#fff;cursor:pointer;transition:all 0.3s ease;}
+.modal-content button.primary{background:#000;color:#fff;border-color:#000;}
+.modal-content button:hover{transform:translateY(-2px);box-shadow:0 5px 15px rgba(0,0,0,0.1);}
 
 /*========== 加载动画 ==========*/
-.loading{display:inline-block;width:20px;height:20px;border:3px solid #f3f3f3;border-top:3px solid #000;border-radius:50%;animation:spin 1s linear infinite}
+.loading{display:inline-block;width:25px;height:25px;border:3px solid #f3f3f3;border-top:3px solid #000;border-radius:50%;animation:spin 1s linear infinite;margin:0 10px;}
 @keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
 
 /*========== 响应式设计 ==========*/
 @media (max-width: 768px){
-    .btn-fixed .btn{width:120px;height:40px;line-height:40px;font-size:14px}
-    .modal-content{padding:20px;min-width:250px}
-    #liveInfo{font-size:14px;bottom:110px}
+    .header h1{font-size:2rem;}
+    .header p{font-size:1rem;}
+    .payment-buttons{grid-template-columns:1fr;}
+    .pay-btn{padding:12px 20px;font-size:1rem;}
+    .btn-fixed .btn{width:130px;height:45px;line-height:45px;font-size:1rem;}
+    .live-info{font-size:1rem;padding:12px 20px;min-width:250px;}
 }
+
+/*========== 页面内容 ==========*/
+.page{display:none;width:100%;}
+.page.active{display:block;}
+#home{display:block;}
 </style>
 </head>
 <body>
-<!-- 三个页面 -->
-<div id="my" class="page"><h2>我的</h2><p>登录/订单记录等</p></div>
-<div id="home" class="page active">
-    <h2>首页</h2>
-    <video src="video1.mp4" controls width="100%"></video>
-    <p>扫码、取号、玩法视频、支付按钮都可以放在这。</p>
-    <!-- 模拟支付 -->
-    <button onclick="simulatePay(1)">模拟支付1（10元/30分钟）</button>
-    <button onclick="simulatePay(2)">模拟支付2（5元/10分钟）</button>
-</div>
-<div id="agreement" class="page"><h2>用户协议</h2><p>机器狗游玩须知、免责条款写这里。</p></div>
+<!-- 主容器 -->
+<div class="container">
+    <!-- 标题 -->
+    <div class="header">
+        <h1>🤖 机器狗智能游乐场</h1>
+        <p>扫码取号 · 智能排队 · 畅快体验</p>
+    </div>
 
-<!-- 底部固定按钮 -->
+    <!-- 视频区域 -->
+    <div class="video-container">
+        <video src="video1.mp4" controls poster="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 600 400'%3E%3Crect width='600' height='400' fill='%23f0f0f0'/%3E%3Cpath d='M240,200 L360,200 L300,150 Z' fill='%23ccc'/%3E%3C/svg%3E">
+            您的浏览器不支持视频播放
+        </video>
+        <div class="video-desc">观看机器狗精彩表演和操作演示</div>
+    </div>
+
+    <!-- 支付测试区域 -->
+    <div class="payment-section">
+        <h3>🎯 测试支付功能</h3>
+        <p>点击下方按钮模拟支付成功，测试服务器响应</p>
+        <div class="payment-buttons">
+            <button class="pay-btn" onclick="simulatePay(1)">
+                💰 10元 / 30分钟
+            </button>
+            <button class="pay-btn" onclick="simulatePay(2)">
+                💰 5元 / 10分钟
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- 实时排队信息 -->
+<div class="live-info" id="liveInfo">
+    📍 当前编号：---- | 排队：--人 | 预计：--:--
+</div>
+
+<!-- 底部按钮 -->
 <div class="btn-fixed">
-    <div class="btn" id="btnWantPlay">我要玩</div>
-    <div class="btn">我要挑战</div>
+    <div class="btn" id="btnWantPlay">🎮 我要玩</div>
+    <div class="btn">🏆 我要挑战</div>
 </div>
 
 <!-- 底部导航 -->
 <nav class="tabbar">
-    <div class="item" data-page="my">我的</div>
-    <div class="item active" data-page="home">首页</div>
-    <div class="item" data-page="agreement">用户协议</div>
+    <div class="item" data-page="my">👤 我的</div>
+    <div class="item active" data-page="home">🏠 首页</div>
+    <div class="item" data-page="agreement">📝 协议</div>
 </nav>
 
-<!-- 主页实时排队信息 -->
-<div id="liveInfo">当前编号----，还有----人，预计--:--</div>
-
-<!-- ========== 弹窗区域 ========== -->
-<!-- 1. 一级：观看视频 or 直接玩 -->
-<div class="modal" id="modalFirst"><div class="modal-content">
-    <h3>选择操作</h3>
-    <button id="watchVideoBtn">观看操控视频</button>
-    <button id="directPlayBtn" class="primary">直接玩</button>
-</div></div>
-
-<!-- 2. 视频播放 -->
-<div class="modal" id="modalVideo"><div class="modal-content">
-    <h3>操控演示</h3>
-    <video src="video2.mp4" controls></video>
-    <button onclick="closeModal('modalVideo')">关闭</button>
-</div></div>
-
-<!-- 3. 选择套餐 -->
-<div class="modal" id="modalPrice"><div class="modal-content">
-    <h3>选择套餐</h3>
-    <button data-price="10" data-time="30">10元 / 30分钟</button>
-    <button data-price="5"  data-time="10">5元 / 10分钟</button>
-    <button onclick="closeModal('modalPrice')">取消</button>
-</div></div>
-
-<!-- 4. 支付方式 -->
-<div class="modal" id="modalPay"><div class="modal-content">
-    <h3>选择支付方式</h3>
-    <button class="payOption" data-channel="wechat">微信</button>
-    <button class="payOption" data-channel="alipay">支付宝</button>
-    <button class="payOption" data-channel="bank">银行卡</button>
-    <button onclick="closeModal('modalPay')">返回</button>
-</div></div>
-
-<!-- 5. 排队中 -->
-<div class="modal" id="modalQueue"><div class="modal-content">
-    <h3>排队中</h3>
-    <p>您的编号：<span id="queueNum">----</span></p>
-    <p>前面还有 <span id="queueAhead">--</span> 人</p>
-    <p>预计等待时间：<span id="queueTime">--:--</span></p>
-    <div id="queueLoading" class="loading" style="margin:10px auto;display:none"></div>
-    <button onclick="closeModal('modalQueue')">关闭</button>
-</div></div>
+<!-- 排队中弹窗 -->
+<div class="modal" id="modalQueue">
+    <div class="modal-content">
+        <h3>⏳ 排队中</h3>
+        <div style="font-size:2rem;margin:15px 0;">🎯</div>
+        <p>您的编号：<strong id="queueNum">----</strong></p>
+        <p>前面还有 <strong id="queueAhead">--</strong> 人</p>
+        <p>预计等待：<strong id="queueTime">--:--</strong></p>
+        <div class="loading" id="queueLoading" style="margin:15px auto;"></div>
+        <button onclick="closeModal('modalQueue')" class="primary">👌 知道了</button>
+    </div>
+</div>
 
 <script>
 // 全局变量
-let currentPrice = 0;
-let currentTime = 0;
 let refreshInterval = null;
 
-/*========== 工具：打开 / 关闭弹窗 ==========*/
+/*========== 弹窗控制 ==========*/
 function openModal(id){ 
     closeAllModal(); 
     document.getElementById(id).classList.add('active'); 
@@ -137,131 +157,112 @@ function closeAllModal(){
         refreshInterval = null;
     }
 }
-document.querySelectorAll('.modal').forEach(modal=>{ 
-    modal.addEventListener('click',function(e){ 
-        if(e.target===modal) closeModal(modal.id); 
-    }); 
-});
 
-/*========== 底部导航切换 ==========*/
-document.querySelectorAll('.tabbar .item').forEach(btn=>{
-    btn.addEventListener('click', function(){
-        document.querySelectorAll('.tabbar .item').forEach(b=>b.classList.remove('active'));
-        this.classList.add('active');
-        document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-        document.getElementById(this.dataset.page).classList.add('active');
-    });
-});
-
-/*========== 我要玩 ==========*/
-document.getElementById('btnWantPlay').onclick = ()=> openModal('modalFirst');
-document.getElementById('watchVideoBtn').onclick = ()=>{ closeModal('modalFirst'); openModal('modalVideo'); };
-document.getElementById('directPlayBtn').onclick = ()=>{ closeModal('modalFirst'); openModal('modalPrice'); };
-
-/*========== 支付流程 ==========*/
-document.querySelectorAll('#modalPrice button[data-price]').forEach(btn=>{
-    btn.addEventListener('click',function(){
-        currentPrice = parseInt(this.dataset.price);
-        currentTime  = parseInt(this.dataset.time);
-        closeModal('modalPrice');
-        openModal('modalPay');
-    });
-});
-
-document.querySelectorAll('.payOption').forEach(btn=>{
-    btn.addEventListener('click',async function(){
-        const channel = this.dataset.channel;
-        const loadingElem = document.getElementById('queueLoading');
-        const closeBtn = document.querySelector('#modalQueue button');
-        
-        closeModal('modalPay');
-        openModal('modalQueue');
-        loadingElem.style.display = 'block';
-        closeBtn.style.display = 'none';
-        
-        try {
-            // 模拟支付处理时间
-            await new Promise(resolve => setTimeout(resolve, 1500));
-            await createOrder(currentPrice, currentTime);
-        } catch (error) {
-            alert('支付失败：' + error.message);
-        } finally {
-            loadingElem.style.display = 'none';
-            closeBtn.style.display = 'block';
-        }
-    });
-});
-
-/*========== 模拟支付按钮（测试用） ==========*/
+/*========== 模拟支付函数 ==========*/
 async function simulatePay(type){
-    const price = type===1?10:5;
-    const time  = type===1?30:10;
+    const price = type === 1 ? 10 : 5;
+    const time = type === 1 ? 30 : 10;
     
+    console.log(`模拟支付：${price}元/${time}分钟`);
+    
+    // 显示排队弹窗
     openModal('modalQueue');
-    const loadingElem = document.getElementById('queueLoading');
-    const closeBtn = document.querySelector('#modalQueue button');
-    loadingElem.style.display = 'block';
-    closeBtn.style.display = 'none';
+    document.getElementById('queueLoading').style.display = 'block';
     
     try {
-        await createOrder(price, time);
-    } catch (error) {
-        alert('支付失败：' + error.message);
-    } finally {
-        loadingElem.style.display = 'none';
-        closeBtn.style.display = 'block';
-    }
-}
-
-/*========== 创建订单 → 排队 ==========*/
-async function createOrder(price, time){
-    try {
-        const res = await fetch('/api/createOrder', {
+        // 模拟网络请求延迟
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        
+        // 调用创建订单API
+        const response = await fetch('/api/createOrder', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ price, time })
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                price: price,
+                time: time
+            })
         });
         
-        const data = await res.json();
+        const data = await response.json();
         
         if(data.ok){
-            updateLiveInfo(data);
+            // 更新界面信息
+            updateQueueInfo(data);
             
-            // 每5秒刷新一次排队信息
-            if (refreshInterval) clearInterval(refreshInterval);
-            refreshInterval = setInterval(async ()=>{
-                try {
-                    const r = await fetch('/api/queueInfo?id=' + data.id);
-                    const d = await r.json();
-                    if(d.ok){ 
-                        updateLiveInfo(d); 
-                    } else { 
-                        clearInterval(refreshInterval);
-                        refreshInterval = null;
-                    }
-                } catch (error) {
-                    console.error('刷新排队信息失败:', error);
-                }
-            }, 5000);
+            // 开始轮询排队状态
+            startQueuePolling(data.id);
+            
         } else {
-            throw new Error(data.msg || '订单创建失败');
+            throw new Error(data.msg || '支付失败');
         }
+        
     } catch (error) {
+        console.error('支付错误:', error);
+        alert('❌ ' + error.message);
         closeModal('modalQueue');
-        throw error;
+    } finally {
+        document.getElementById('queueLoading').style.display = 'none';
     }
 }
 
-function updateLiveInfo(d){
-    document.getElementById('queueNum').textContent = d.orderNum;
-    document.getElementById('queueAhead').textContent = d.ahead;
-    document.getElementById('queueTime').textContent = d.waitTime;
-    document.getElementById('liveInfo').textContent = `当前编号${d.orderNum}，还有${d.ahead}人，预计排队${d.waitTime}`;
+/*========== 更新排队信息 ==========*/
+function updateQueueInfo(data){
+    document.getElementById('queueNum').textContent = data.orderNum || '0001';
+    document.getElementById('queueAhead').textContent = data.ahead || '0';
+    document.getElementById('queueTime').textContent = data.waitTime || '立即';
+    
+    // 更新底部实时信息
+    const liveInfo = document.getElementById('liveInfo');
+    liveInfo.innerHTML = `📍 当前编号：${data.orderNum || '0001'} | 排队：${data.ahead || '0'}人 | 预计：${data.waitTime || '立即'}`;
 }
 
-// 页面加载时初始化
+/*========== 排队状态轮询 ==========*/
+function startQueuePolling(orderId){
+    if (refreshInterval) clearInterval(refreshInterval);
+    
+    refreshInterval = setInterval(async () => {
+        try {
+            const response = await fetch(`/api/queueInfo?id=${orderId}`);
+            const data = await response.json();
+            
+            if(data.ok){
+                updateQueueInfo(data);
+                
+                // 如果排队完成，停止轮询
+                if(data.ahead === 0 || data.status === 'playing'){
+                    clearInterval(refreshInterval);
+                    refreshInterval = null;
+                }
+            }
+        } catch (error) {
+            console.error('轮询错误:', error);
+        }
+    }, 5000);
+}
+
+/*========== 初始化事件监听 ==========*/
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('机器狗排队系统客户端已加载');
+    console.log('🤖 机器狗排队系统已启动');
+    
+    // 我要玩按钮
+    document.getElementById('btnWantPlay').addEventListener('click', function() {
+        simulatePay(1); // 默认选择10元套餐
+    });
+    
+    // 底部导航
+    document.querySelectorAll('.tabbar .item').forEach(btn => {
+        btn.addEventListener('click', function(){
+            document.querySelectorAll('.tabbar .item').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+        });
+    });
+});
+
+// 错误处理
+window.addEventListener('error', function(e) {
+    console.error('页面错误:', e.error);
 });
 </script>
 </body>
