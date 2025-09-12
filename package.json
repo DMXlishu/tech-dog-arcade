@@ -1,8 +1,8 @@
 {
   "name": "tech-dog-arcade",
   "version": "1.0.0",
-  "engines": {
-    "node": "18.x"
-  },
-  "dependencies": {}
+  "description": "机器狗游乐场排队系统",
+  "scripts": {
+    "dev": "vercel dev"
+  }
 }
