@@ -1,10 +1,17 @@
 const { readOrders } = require('../lib/data');
 
 module.exports = async (req, res) => {
+  // 设置CORS头
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+  // 处理预检请求
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
 
+  // 只允许GET请求
   if (req.method !== 'GET') {
     return res.status(405).json({ ok: false, msg: '仅支持GET请求' });
   }
@@ -23,6 +30,7 @@ module.exports = async (req, res) => {
       return res.json({ ok: false, msg: '订单不存在' });
     }
 
+    // 计算排队信息
     const queueOrders = orders.filter(o => o.status === 'queue');
     const ahead = queueOrders.filter(o => o.id < order.id).length;
     const waitTime = Math.ceil(ahead * 10);
