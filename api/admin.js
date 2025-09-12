@@ -9,17 +9,18 @@ function readj(f) {
 }
 
 module.exports = (req, res) => {
-  // ===== 必须放在最前面 =====
+  // ===== CORS 必须放在最前面 =====
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST,OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
+  // 预检请求
   if (req.method === 'OPTIONS') {
-    return res.status(200).end(); // 预检请求
+    return res.status(200).end();
   }
 
+  // 原逻辑
   if (req.method !== 'POST') return res.status(405).json({ ok: false, msg: '仅支持POST' });
-
   if (req.body.password !== PASSWORD) return res.status(401).json({ ok: false, msg: '密码错误' });
 
   const rows = readj(ORDERS_FILE).map((r, idx) => ({
