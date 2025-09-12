@@ -1,9 +1,12 @@
 const { readOrders, writeOrders, generateOrderNum } = require('../lib/data');
 
 module.exports = async (req, res) => {
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
+  // CORS 设置
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST,OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+  if (req.method === 'OPTIONS') return res.status(200).end();
 
   if (req.method !== 'POST') {
     return res.status(405).json({ ok: false, msg: '仅支持POST请求' });
@@ -23,9 +26,10 @@ module.exports = async (req, res) => {
     
     const newOrder = {
       id: Date.now(),
-      orderNum,
+      orderNum: orderNum,
       price: parseInt(price),
       time: parseInt(time),
+      planType: price === 10 ? 1 : 2, // 记录套餐类型
       date: now.toLocaleString('zh-CN'),
       status: 'queue',
       createdAt: now.toISOString()
@@ -43,7 +47,7 @@ module.exports = async (req, res) => {
         ok: true,
         id: newOrder.id,
         orderNum: newOrder.orderNum,
-        ahead,
+        ahead: ahead,
         waitTime: `${waitTime}分钟`,
         msg: '订单创建成功'
       });
