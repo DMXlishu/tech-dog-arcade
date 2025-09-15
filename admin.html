@@ -159,13 +159,21 @@ function renderTable(data) {
     data.rows.forEach((row, index) => {
         const tr = document.createElement('tr');
         tr.innerHTML = `
-            <td>${row.id}</td>
-            <td class="orderNum">${row.orderNum.toString().padStart(4, '0')}</td>
-            <td>套餐${row.planType}</td>
-            <td>${row.price}元</td>
-            <td>${row.dailyTotal}元</td>
-            <td>${row.total}元</td>
-        `;
+  <td>${row.id}</td>
+  <td class="orderNum">${row.orderNum}</td>
+  <td>套餐${row.planType}</td>
+  <td>${row.price}元</td>
+  <td>${row.dailyTotal}元</td>
+  <td>${row.total}元</td>
+  <td id="st-${row.id}">${row.status}</td>
+  <td id="rm-${row.id}">${row.remaining}</td>
+  <td>
+    <button onclick="orderOp(${row.id},'skip')">跳过</button>
+    <button onclick="orderOp(${row.id},'end')">终止</button>
+    <button onclick="orderOp(${row.id},'pause')">暂停</button>
+    <button onclick="orderOp(${row.id},'resume')">继续</button>
+  </td>
+`;
         tbody.appendChild(tr);
     });
 }
