@@ -1,18 +1,20 @@
+import { readOrders } from '../lib/data.js';
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  if (req.method === 'OPTIONS') return res.status(200).end();
 
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
+  const id = Number(req.query.id || 0);
+  const orders = readOrders();
+  const me  = orders.find(o => o.id === id);
+  if (!me) return res.status(404).json({ ok: false, msg: '订单不存在' });
 
-  // 返回模拟排队信息
+  const ahead = orders.filter(o => !o.done && o.id < id).length;
   res.status(200).json({
     ok: true,
-    orderNum: Math.floor(Math.random() * 100) + 1,
-    ahead: Math.max(0, Math.floor(Math.random() * 10) - 1),
-    waitTime: '10分钟',
-    status: 'queue'
+    orderNum: me.orderNum,
+    ahead,
+    waitTime: `${(ahead + 1) * 5}分钟`,
+    status: ahead === 0 ? 'playing' : 'queue'
   });
 }
