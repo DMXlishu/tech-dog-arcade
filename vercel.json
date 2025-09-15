@@ -1,1 +1,6 @@
-
+{
+  "crons": [
+    { "path": "/api/resetDaily", "schedule": "0 0 * * *" },
+    { "path": "/api/timerTick", "schedule": "*/1 * * * *" }
+  ]
+}
