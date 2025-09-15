@@ -5,254 +5,177 @@
 <title>机器狗 - 管理系统</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
-/*========== 基础 ==========*/
-*{box-sizing:border-box;margin:0;padding:0}
-body{display:flex;flex-direction:column;min-height:100vh;background:#f7f7f7;font-family:-apple-system,"Helvetica Neue",Arial,sans-serif;padding:20px;}
-.header{text-align:center;margin-bottom:20px;padding:15px;background:#fff;border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,0.1)}
-.header h1{margin:0;color:#333;font-size:24px}
-
-/*========== 控制面板 ==========*/
-.control-panel{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:15px;margin-bottom:20px}
-.control-btn{padding:12px;background:#fff;border:2px solid #000;border-radius:8px;text-align:center;cursor:pointer;font-weight:bold;transition:all 0.3s}
-.control-btn:hover{background:#000;color:#fff;transform:translateY(-2px)}
-.control-btn.refresh{background:#1890ff;color:#fff;border-color:#1890ff}
-.control-btn.clear{background:#ff4d4f;color:#fff;border-color:#ff4d4f}
-
-/*========== 数据统计 ==========*/
-.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:15px;margin-bottom:20px}
-.stat-card{padding:15px;background:#fff;border-radius:8px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,0.1)}
-.stat-card h3{margin:0 0 10px 0;font-size:14px;color:#666}
-.stat-card .value{font-size:24px;font-weight:bold;color:#000}
-
-/*========== 表格样式 ==========*/
-.table-container{flex:1;overflow:auto;background:#fff;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.1)}
-table{width:100%;border-collapse:collapse}
-th,td{border:1px solid #e8e8e8;padding:12px 8px;text-align:center;font-size:14px}
-th{background:#fafafa;font-weight:bold;position:sticky;top:0}
-tr:hover{background:#f5f5f5}
-tr:first-child td{background:#fff2e8;font-weight:bold}
-tr:first-child td.orderNum{color:#ff4d4f}
-td.orderNum{font-weight:bold}
-
-/* 表格列宽调整 */
-#adminTable thead tr th:nth-child(1) { width: 10%; } /* 编号 */
-#adminTable thead tr th:nth-child(2) { width: 15%; } /* 订单号 */
-#adminTable thead tr th:nth-child(3) { width: 15%; } /* 套餐类型 */
-#adminTable theach tr th:nth-child(4) { width: 15%; } /* 本单收益 */
-#adminTable thead tr th:nth-child(5) { width: 20%; } /* 今日总收益 */
-#adminTable thead tr th:nth-child(6) { width: 20%; } /* 总收益 */
-
-/*========== 加载和错误状态 ==========*/
-.loading{text-align:center;padding:40px;font-size:16px;color:#666}
-.loading::after{content:"";display:inline-block;width:20px;height:20px;border:3px solid #f3f3f3;border-top:3px solid #000;border-radius:50%;animation:spin 1s linear infinite;margin-left:10px}
-.error{text-align:center;padding:40px;color:#ff4d4f;font-size:16px}
-@keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
-
-/*========== 响应式设计 ==========*/
-@media (max-width: 768px){
-    .control-panel{grid-template-columns:1fr 1fr}
-    .stats{grid-template-columns:1fr 1fr}
-    th,td{padding:8px 4px;font-size:12px}
-    .header h1{font-size:20px}
-}
-@media (max-width: 480px){
-    .control-panel{grid-template-columns:1fr}
-    .stats{grid-template-columns:1fr}
-}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { display: flex; flex-direction: column; min-height: 100vh; background: #f7f7f7; font-family: -apple-system, "Helvetica Neue", Arial, sans-serif; padding: 20px; }
+.header { text-align: center; margin-bottom: 20px; padding: 15px; background: #fff; border-radius: 10px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); }
+.header h1 { margin: 0; color: #333; font-size: 24px; }
+.control-panel { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin-bottom: 20px; }
+.control-btn { padding: 10px; background: #fff; border: 2px solid #000; border-radius: 8px; text-align: center; cursor: pointer; font-weight: bold; transition: all 0.3s; }
+.control-btn:hover { background: #000; color: #fff; transform: translateY(-2px); }
+.control-btn.refresh { background: #1890ff; color: #fff; border-color: #1890ff; }
+.control-btn.clear { background: #ff4d4f; color: #fff; border-color: #ff4d4f; }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax 150px, 1fr); gap: 15px; margin-bottom: 20px; }
+.stat-card { padding: 15px; background: #fff; border-radius: 8px; text-align: center; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); }
+.stat-card h3 { margin: 0 0 10px 0; font-size: 14px; color: #666; }
+.stat-card .value { font-size: 24px; font-weight: bold; color: #000; }
+.table-container { flex: 1; overflow: auto; background: #fff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); }
+table { width: 100%; border-collapse: collapse; }
+th, td { border: 1px solid #e8e8e8; padding: 8px 4px; text-align: center; font-size: 13px; }
+th { background: #fafafa; font-weight: bold; position: sticky; top: 0; }
+tr:hover { background: #f5f5f5; }
+.status-queue { color: #1890ff; }
+.status-playing { color: #52c41a; font-weight: bold; }
+.status-end { color: #999; }
+.btn-op { margin: 2px; padding: 4px 6px; font-size: 12px; border: 1px solid #000; border-radius: 4px; background: #fff; cursor: pointer; }
+.btn-op:hover { background: #000; color: #fff; }
+@media (max-width: 768px) { th, td { font-size: 12px; padding: 6px 3px; } .btn-op { font-size: 11px; } }
 </style>
 </head>
 <body>
 <div class="header">
-    <h1>🐕 机器狗管理系统</h1>
-    <p>实时监控订单和收益情况</p>
+  <h1>🐕 机器狗管理系统</h1>
+  <p>实时监控订单和收益情况</p>
 </div>
 
 <div class="control-panel">
-    <div class="control-btn refresh" onclick="loadData()">
-        🔄 刷新数据
-    </div>
-    <div class="control-btn" onclick="exportData()">
-        📊 导出数据
-    </div>
-    <div class="control-btn clear" onclick="clearData()">
-        🗑️ 清除数据
-    </div>
+  <div class="control-btn refresh" onclick="loadData()">🔄 刷新数据</div>
+  <div class="control-btn" onclick="exportData()">📊 导出数据</div>
+  <div class="control-btn clear" onclick="clearData()">🗑️ 清除数据</div>
 </div>
 
 <div class="stats">
-    <div class="stat-card">
-        <h3>今日订单</h3>
-        <div class="value" id="todayOrders">0</div>
-    </div>
-    <div class="stat-card">
-        <h3>总收益</h3>
-        <div class="value" id="totalRevenue">0元</div>
-    </div>
-    <div class="stat-card">
-        <h3>今日收益</h3>
-        <div class="value" id="dailyRevenue">0元</div>
-    </div>
+  <div class="stat-card"><h3>今日订单</h3><div class="value" id="todayOrders">0</div></div>
+  <div class="stat-card"><h3>总收益</h3><div class="value" id="totalRevenue">0元</div></div>
+  <div class="stat-card"><h3>今日收益</h3><div class="value" id="dailyRevenue">0元</div></div>
 </div>
 
 <div class="table-container">
-    <table id="adminTable">
-        <thead>
-            <tr>
-                <th>编号</th>
-                <th>订单号</th>
-                <th>套餐类型</th>
-                <th>本单收益</th>
-                <th>今日总收益</th>
-                <th>总收益</th>
-                <th>状态</th>
-                <th>剩余(秒)</th>
-                <th>操作</th>           
-            </tr>
-        </thead>
-        <tbody></tbody>
-    </table>
+  <table id="adminTable">
+    <thead>
+      <tr>
+        <th>编号</th><th>订单号</th><th>套餐</th><th>金额</th>
+        <th>状态</th><th>剩余(秒)</th><th>操作</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
 </div>
 
-<div id="adminSum" style="margin-top:20px;padding:15px;background:#fff;border-radius:8px;text-align:center;font-weight:bold;"></div>
-
 <script>
-// 全局变量
 let currentData = null;
+let remainTimer = null;
 
-/*========== 加载数据 ==========*/
 async function loadData() {
-    const password = prompt('请输入管理员密码:');
-    if (password !== 'qwer123') {
-        alert('密码错误');
-        return;
-    }
+  const pwd = prompt('请输入管理员密码:');
+  if (pwd !== 'qwer123') { alert('密码错误'); return; }
 
-    try {
-        const response = await fetch('/api/admin', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ password: password })
-        });
-        
-        const data = await response.json();
-        
-        if (data.ok) {
-            currentData = data;
-            renderTable(data);
-            updateStats(data);
-        } else {
-            alert('加载失败: ' + data.msg);
-        }
-    } catch (error) {
-        console.error('加载数据错误:', error);
-        alert('网络错误，请重试');
-    }
-}
-
-/*========== 渲染表格 ==========*/
-function renderTable(data) {
-    const tbody = document.querySelector('#adminTable tbody');
-    tbody.innerHTML = '';
-    
-    data.rows.forEach((row, index) => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-  <td>${row.id}</td>
-  <td class="orderNum">${row.orderNum}</td>
-  <td>套餐${row.planType}</td>
-  <td>${row.price}元</td>
-  <td>${row.dailyTotal}元</td>
-  <td>${row.total}元</td>
-  <td id="st-${row.id}">${row.status}</td>
-  <td id="rm-${row.id}">${row.remaining}</td>
-  <td>
-    <button onclick="orderOp(${row.id},'skip')">跳过</button>
-    <button onclick="orderOp(${row.id},'end')">终止</button>
-    <button onclick="orderOp(${row.id},'pause')">暂停</button>
-    <button onclick="orderOp(${row.id},'resume')">继续</button>
-  </td>
-`;
-        tbody.appendChild(tr);
+  try {
+    const res = await fetch('/api/admin', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password: pwd })
     });
+    const json = await res.json();
+    if (json.ok) {
+      currentData = json;
+      renderTable(json);
+      updateStats(json);
+      startRemainCountdown();
+    } else {
+      alert('加载失败: ' + json.msg);
+    }
+  } catch (e) {
+    console.error(e);
+    alert('网络错误');
+  }
 }
 
-/*========== 更新统计信息 ==========*/
+function renderTable(data) {
+  const tbody = document.querySelector('#adminTable tbody');
+  tbody.innerHTML = '';
+  data.rows.forEach(r => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${r.id}</td>
+      <td>${r.orderNum}</td>
+      <td>套餐${r.planType}</td>
+      <td>${r.price}元</td>
+      <td class="status-${r.status}">${statusText(r.status)}</td>
+      <td id="rm-${r.id}">${r.remaining}</td>
+      <td>
+        <button class="btn-op" onclick="orderOp(${r.id},'skip')">跳过</button>
+        <button class="btn-op" onclick="orderOp(${r.id},'end')">终止</button>
+        <button class="btn-op" onclick="orderOp(${r.id},'pause')">暂停</button>
+        <button class="btn-op" onclick="orderOp(${r.id},'resume')">继续</button>
+      </td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+function statusText(s) {
+  switch (s) {
+    case 'queue': return '排队中';
+    case 'playing': return '游玩中';
+    case 'end': return '结束';
+    default: return s;
+  }
+}
+
 function updateStats(data) {
-    document.getElementById('todayOrders').textContent = data.rows.length;
-    document.getElementById('totalRevenue').textContent = data.total + '元';
-    document.getElementById('dailyRevenue').textContent = data.dailyTotal + '元';
-    document.getElementById('adminSum').textContent = `总收益：${data.total}元 | 今日收益：${data.dailyTotal}元`;
+  document.getElementById('todayOrders').textContent = data.rows.length;
+  document.getElementById('totalRevenue').textContent = data.total + '元';
+  document.getElementById('dailyRevenue').textContent = data.dailyTotal + '元';
 }
 
-/*========== 导出数据 ==========*/
-function exportData() {
-    if (!currentData) {
-        alert('请先加载数据');
-        return;
-    }
-    
-    const csvContent = [
-        ['编号', '订单号', '套餐类型', '本单收益', '今日总收益', '总收益'],
-        ...currentData.rows.map(row => [
-            row.id,
-            row.orderNum.toString().padStart(4, '0'),
-            '套餐' + row.planType,
-            row.price + '元',
-            row.dailyTotal + '元',
-            row.total + '元'
-        ])
-    ].map(row => row.join(',')).join('\n');
-    
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = `机器狗订单数据_${new Date().toLocaleDateString()}.csv`;
-    link.click();
+function startRemainCountdown() {
+  if (remainTimer) clearInterval(remainTimer);
+  remainTimer = setInterval(() => {
+    document.querySelectorAll('td[id^="rm-"]').forEach(el => {
+      let sec = parseInt(el.textContent);
+      if (sec > 0) el.textContent = sec - 1;
+    });
+  }, 1000);
 }
 
-/*========== 清除数据 ==========*/
+async function orderOp(id, action) {
+  const res = await fetch('/api/orderOp', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ id, action })
+  });
+  const json = await res.json();
+  if (json.ok) loadData(); else alert(json.msg);
+}
+
+async function exportData() {
+  if (!currentData) { alert('请先加载数据'); return; }
+  const rows = [
+    ['订单号', '套餐', '金额', '状态', '剩余秒', '日期'],
+    ...currentData.rows.map(r => [r.orderNum, r.planType, r.price, r.status, r.remaining, r.date])
+  ].map(r => r.join(',')).join('\n');
+  const blob = new Blob([rows], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = `机器狗订单_${new Date().toLocaleDateString()}.csv`;
+  link.click();
+}
+
 async function clearData() {
-    const password = prompt('请输入管理员密码确认清除:');
-    if (password !== 'qwer123') {
-        alert('密码错误');
-        return;
-    }
-    
-    if (!confirm('确定要清除所有数据吗？此操作不可恢复！')) {
-        return;
-    }
-    
-    try {
-        const response = await fetch('/api/clear', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ password: password })
-        });
-        
-        const data = await response.json();
-        
-        if (data.ok) {
-            alert('数据已清除');
-            loadData();
-        } else {
-            alert('清除失败: ' + data.msg);
-        }
-    } catch (error) {
-        console.error('清除数据错误:', error);
-        alert('网络错误，请重试');
-    }
+  if (!confirm('确定清空所有数据？')) return;
+  const pwd = prompt('请输入管理员密码确认:');
+  if (pwd !== 'qwer123') { alert('密码错误'); return; }
+  const res = await fetch('/api/clear', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ password: pwd })
+  });
+  const json = await res.json();
+  alert(json.msg);
+  if (json.ok) loadData();
 }
 
-// 页面加载时自动加载数据
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('管理系统已加载');
-    // 可以取消注释下一行来自动加载数据
-    // loadData();
-});
+// 自动首次加载
+window.addEventListener('DOMContentLoaded', () => loadData());
 </script>
 </body>
 </html>
